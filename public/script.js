@@ -33,7 +33,10 @@ const tablaClientes =document.getElementById("tablaClientes");
 const nombreCliente =document.getElementById("nombreCliente");
 const telefonoCliente =document.getElementById("telefonoCliente");
 const correoCliente =document.getElementById("correoCliente");
-
+const formCategoria = document.getElementById("formCategoria");
+const tablaCategorias = document.getElementById("tablaCategorias");
+const nombreCategoria =document.getElementById("nombreCategoria");
+const descripcionCategoria =document.getElementById("descripcionCategoria");
 
 // ==========================================
 // VARIABLES
@@ -45,7 +48,7 @@ let carritoVenta = [];
 
 
 // ==========================================
-// CARGAR CATEGORÍAS DESDE MYSQL
+// CARGAR CATEGORÍAS
 // ==========================================
 
 async function cargarCategorias() {
@@ -55,36 +58,345 @@ async function cargarCategorias() {
         const respuesta = await fetch("/categorias");
 
         if (!respuesta.ok) {
-            throw new Error("No se pudieron cargar las categorías");
+            throw new Error(
+                "No se pudieron cargar las categorías"
+            );
         }
 
         const categorias = await respuesta.json();
 
+        // Llenar el selector de productos
         categoria.innerHTML = `
             <option value="">
                 Seleccionar categoría
             </option>
         `;
 
-        categorias.forEach(c => {
+        categorias.forEach(item => {
 
             const opcion = document.createElement("option");
 
-            opcion.value = c.id_categoria;
-            opcion.textContent = c.nombre;
+            opcion.value = item.id_categoria;
+            opcion.textContent = item.nombre;
 
             categoria.appendChild(opcion);
 
         });
 
+        // Mostrar tabla de categorías
+        mostrarCategorias(categorias);
+
     } catch (error) {
 
-        console.error("Error al cargar categorías:", error);
+        console.error(
+            "Error al cargar categorías:",
+            error
+        );
 
     }
 
 }
+// ==========================================
+// MOSTRAR CATEGORÍAS
+// ==========================================
 
+function mostrarCategorias(categorias) {
+
+    tablaCategorias.innerHTML = "";
+
+    if (categorias.length === 0) {
+
+        tablaCategorias.innerHTML = `
+            <tr>
+                <td colspan="4" style="text-align:center;">
+                    No hay categorías registradas
+                </td>
+            </tr>
+        `;
+
+        return;
+
+    }
+
+    categorias.forEach(item => {
+
+        const fila = document.createElement("tr");
+
+        fila.innerHTML = `
+            <td>
+                ${item.id_categoria}
+            </td>
+
+            <td>
+                ${item.nombre}
+            </td>
+
+            <td>
+                ${item.descripcion || "-"}
+            </td>
+
+            <td>
+
+                <button
+                    class="btn-editar"
+                    onclick="editarCategoria(${item.id_categoria})">
+                    Editar
+                </button>
+
+                <button
+                    class="btn-eliminar"
+                    onclick="eliminarCategoria(${item.id_categoria})">
+                    Eliminar
+                </button>
+
+            </td>
+        `;
+
+        tablaCategorias.appendChild(fila);
+
+    });
+
+}
+// ==========================================
+// GUARDAR / ACTUALIZAR CATEGORÍA
+// ==========================================
+
+formCategoria.addEventListener(
+    "submit",
+    async function (event) {
+
+        event.preventDefault();
+
+        const nombre =
+            nombreCategoria.value.trim();
+
+        const descripcion =
+            descripcionCategoria.value.trim();
+
+        if (!nombre) {
+
+            alert(
+                "El nombre de la categoría es obligatorio."
+            );
+
+            return;
+
+        }
+
+        const datos = {
+            nombre,
+            descripcion
+        };
+
+        try {
+
+            const idEditando =
+                formCategoria.dataset.editando;
+
+            let respuesta;
+
+            if (idEditando) {
+
+                respuesta = await fetch(
+                    `/categorias/${idEditando}`,
+                    {
+                        method: "PUT",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify(datos)
+                    }
+                );
+
+            } else {
+
+                respuesta = await fetch(
+                    "/categorias",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify(datos)
+                    }
+                );
+
+            }
+
+            const resultado =
+                await respuesta.json();
+
+            if (!respuesta.ok) {
+
+                alert(
+                    resultado.error ||
+                    "No se pudo guardar la categoría."
+                );
+
+                return;
+
+            }
+
+            alert(
+                idEditando
+                    ? "Categoría actualizada correctamente."
+                    : "Categoría registrada correctamente."
+            );
+
+            formCategoria.reset();
+
+            delete formCategoria.dataset.editando;
+
+            await cargarCategorias();
+
+        } catch (error) {
+
+            console.error(
+                "Error al guardar categoría:",
+                error
+            );
+
+            alert(
+                "No se pudo conectar con el servidor."
+            );
+
+        }
+
+    }
+);
+// ==========================================
+// EDITAR CATEGORÍA
+// ==========================================
+
+async function editarCategoria(id) {
+
+    try {
+
+        const respuesta =
+            await fetch("/categorias");
+
+        if (!respuesta.ok) {
+
+            throw new Error(
+                "No se pudieron cargar las categorías"
+            );
+
+        }
+
+        const categorias =
+            await respuesta.json();
+
+        const categoriaEncontrada =
+            categorias.find(
+                item =>
+                    Number(item.id_categoria) ===
+                    Number(id)
+            );
+
+        if (!categoriaEncontrada) {
+
+            alert(
+                "Categoría no encontrada."
+            );
+
+            return;
+
+        }
+
+        nombreCategoria.value =
+            categoriaEncontrada.nombre;
+
+        descripcionCategoria.value =
+            categoriaEncontrada.descripcion || "";
+
+        formCategoria.dataset.editando =
+            id;
+
+        formCategoria.scrollIntoView({
+            behavior: "smooth"
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Error al editar categoría:",
+            error
+        );
+
+        alert(
+            "No se pudo cargar la categoría."
+        );
+
+    }
+
+}
+// ==========================================
+// ELIMINAR CATEGORÍA
+// ==========================================
+
+async function eliminarCategoria(id) {
+
+    const confirmar =
+        confirm(
+            "¿Seguro que deseas eliminar esta categoría?"
+        );
+
+    if (!confirmar) {
+        return;
+    }
+
+    try {
+
+        const respuesta =
+            await fetch(
+                `/categorias/${id}`,
+                {
+                    method: "DELETE"
+                }
+            );
+
+        const resultado =
+            await respuesta.json();
+
+        if (!respuesta.ok) {
+
+            alert(
+                resultado.error ||
+                "No se pudo eliminar la categoría."
+            );
+
+            return;
+
+        }
+
+        alert(
+            "Categoría eliminada correctamente."
+        );
+
+        await cargarCategorias();
+
+    } catch (error) {
+
+        console.error(
+            "Error al eliminar categoría:",
+            error
+        );
+
+        alert(
+            "No se pudo conectar con el servidor."
+        );
+
+    }
+
+}
 
 // ==========================================
 // CARGAR PROVEEDORES DESDE MYSQL

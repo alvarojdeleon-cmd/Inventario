@@ -436,6 +436,77 @@
     </div>
 
 </section>
+<!-- ==========================================
+     GESTIÓN DE CATEGORÍAS
+=========================================== -->
+
+<section class="formulario-section">
+
+    <h2>Gestión de categorías</h2>
+
+    <form id="formCategoria">
+
+        <div class="grupo">
+
+            <label for="nombreCategoria">
+                Nombre
+            </label>
+
+            <input
+                type="text"
+                id="nombreCategoria"
+                required
+            >
+
+        </div>
+
+        <div class="grupo">
+
+            <label for="descripcionCategoria">
+                Descripción
+            </label>
+
+            <input
+                type="text"
+                id="descripcionCategoria"
+            >
+
+        </div>
+
+        <button
+            type="submit"
+            class="btn-agregar"
+        >
+            Guardar categoría
+        </button>
+
+    </form>
+
+
+    <div class="tabla-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Acciones</th>
+                </tr>
+
+            </thead>
+
+            <tbody id="tablaCategorias">
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
 
 
 

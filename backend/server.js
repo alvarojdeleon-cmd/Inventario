@@ -70,6 +70,204 @@ app.get("/categorias", (req, res) => {
     });
 
 });
+// ==========================================
+// REGISTRAR CATEGORÍA
+// ==========================================
+
+app.post("/categorias", (req, res) => {
+
+    const {
+        nombre,
+        descripcion
+    } = req.body;
+
+    if (!nombre || nombre.trim() === "") {
+
+        return res.status(400).json({
+            error: "El nombre de la categoría es obligatorio"
+        });
+
+    }
+
+    const sql = `
+        INSERT INTO categorias
+        (nombre, descripcion)
+        VALUES (?, ?)
+    `;
+
+    const valores = [
+        nombre.trim(),
+        descripcion || null
+    ];
+
+    db.query(sql, valores, (error, resultado) => {
+
+        if (error) {
+
+            console.error(
+                "Error al registrar categoría:",
+                error
+            );
+
+            if (error.code === "ER_DUP_ENTRY") {
+
+                return res.status(400).json({
+                    error: "Esa categoría ya existe"
+                });
+
+            }
+
+            return res.status(500).json({
+                error: "No se pudo registrar la categoría"
+            });
+
+        }
+
+        res.status(201).json({
+
+            mensaje:
+                "Categoría registrada correctamente",
+
+            id_categoria:
+                resultado.insertId
+
+        });
+
+    });
+
+});
+
+
+// ==========================================
+// ACTUALIZAR CATEGORÍA
+// ==========================================
+
+app.put("/categorias/:id", (req, res) => {
+
+    const id = req.params.id;
+
+    const {
+        nombre,
+        descripcion
+    } = req.body;
+
+    if (!nombre || nombre.trim() === "") {
+
+        return res.status(400).json({
+            error: "El nombre de la categoría es obligatorio"
+        });
+
+    }
+
+    const sql = `
+        UPDATE categorias
+        SET
+            nombre = ?,
+            descripcion = ?
+        WHERE id_categoria = ?
+    `;
+
+    const valores = [
+        nombre.trim(),
+        descripcion || null,
+        id
+    ];
+
+    db.query(sql, valores, (error, resultado) => {
+
+        if (error) {
+
+            console.error(
+                "Error al actualizar categoría:",
+                error
+            );
+
+            if (error.code === "ER_DUP_ENTRY") {
+
+                return res.status(400).json({
+                    error: "Esa categoría ya existe"
+                });
+
+            }
+
+            return res.status(500).json({
+                error: "No se pudo actualizar la categoría"
+            });
+
+        }
+
+        if (resultado.affectedRows === 0) {
+
+            return res.status(404).json({
+                error: "Categoría no encontrada"
+            });
+
+        }
+
+        res.json({
+            mensaje:
+                "Categoría actualizada correctamente"
+        });
+
+    });
+
+});
+
+
+// ==========================================
+// ELIMINAR CATEGORÍA
+// ==========================================
+
+app.delete("/categorias/:id", (req, res) => {
+
+    const id = req.params.id;
+
+    const sql = `
+        DELETE FROM categorias
+        WHERE id_categoria = ?
+    `;
+
+    db.query(sql, [id], (error, resultado) => {
+
+        if (error) {
+
+            console.error(
+                "Error al eliminar categoría:",
+                error
+            );
+
+            if (error.code === "ER_ROW_IS_REFERENCED_2") {
+
+                return res.status(400).json({
+                    error:
+                        "No se puede eliminar esta categoría porque tiene productos relacionados."
+                });
+
+            }
+
+            return res.status(500).json({
+                error:
+                    "No se pudo eliminar la categoría"
+            });
+
+        }
+
+        if (resultado.affectedRows === 0) {
+
+            return res.status(404).json({
+                error: "Categoría no encontrada"
+            });
+
+        }
+
+        res.json({
+            mensaje:
+                "Categoría eliminada correctamente"
+        });
+
+    });
+
+});
 
 
 // ==========================================
