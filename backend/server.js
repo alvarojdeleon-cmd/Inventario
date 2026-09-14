@@ -147,6 +147,209 @@ app.get("/clientes", (req, res) => {
     });
 
 });
+// ==========================================
+// REGISTRAR CLIENTE
+// ==========================================
+
+app.post("/clientes", (req, res) => {
+
+    const {
+        nombre,
+        telefono,
+        correo
+    } = req.body;
+
+
+    if (!nombre || nombre.trim() === "") {
+
+        return res.status(400).json({
+            error: "El nombre del cliente es obligatorio"
+        });
+
+    }
+
+
+    const sql = `
+        INSERT INTO clientes
+        (nombre, telefono, correo)
+        VALUES (?, ?, ?)
+    `;
+
+
+    const valores = [
+        nombre.trim(),
+        telefono || null,
+        correo || null
+    ];
+
+
+    db.query(sql, valores, (error, resultado) => {
+
+        if (error) {
+
+            console.error(
+                "Error al registrar cliente:",
+                error
+            );
+
+            return res.status(500).json({
+                error: "No se pudo registrar el cliente"
+            });
+
+        }
+
+
+        res.status(201).json({
+
+            mensaje: "Cliente registrado correctamente",
+
+            id_cliente: resultado.insertId
+
+        });
+
+    });
+
+});
+
+
+// ==========================================
+// ACTUALIZAR CLIENTE
+// ==========================================
+
+app.put("/clientes/:id", (req, res) => {
+
+    const id = req.params.id;
+
+
+    const {
+        nombre,
+        telefono,
+        correo
+    } = req.body;
+
+
+    if (!nombre || nombre.trim() === "") {
+
+        return res.status(400).json({
+            error: "El nombre del cliente es obligatorio"
+        });
+
+    }
+
+
+    const sql = `
+        UPDATE clientes
+
+        SET
+            nombre = ?,
+            telefono = ?,
+            correo = ?
+
+        WHERE id_cliente = ?
+    `;
+
+
+    const valores = [
+        nombre.trim(),
+        telefono || null,
+        correo || null,
+        id
+    ];
+
+
+    db.query(sql, valores, (error, resultado) => {
+
+        if (error) {
+
+            console.error(
+                "Error al actualizar cliente:",
+                error
+            );
+
+            return res.status(500).json({
+                error: "No se pudo actualizar el cliente"
+            });
+
+        }
+
+
+        if (resultado.affectedRows === 0) {
+
+            return res.status(404).json({
+                error: "Cliente no encontrado"
+            });
+
+        }
+
+
+        res.json({
+            mensaje: "Cliente actualizado correctamente"
+        });
+
+    });
+
+});
+
+
+// ==========================================
+// ELIMINAR CLIENTE
+// ==========================================
+
+app.delete("/clientes/:id", (req, res) => {
+
+    const id = req.params.id;
+
+
+    const sql = `
+        DELETE FROM clientes
+        WHERE id_cliente = ?
+    `;
+
+
+    db.query(sql, [id], (error, resultado) => {
+
+        if (error) {
+
+            console.error(
+                "Error al eliminar cliente:",
+                error
+            );
+
+
+            // El cliente puede tener ventas relacionadas
+            if (error.code === "ER_ROW_IS_REFERENCED_2") {
+
+                return res.status(400).json({
+                    error:
+                        "No se puede eliminar este cliente porque tiene ventas registradas."
+                });
+
+            }
+
+
+            return res.status(500).json({
+                error: "No se pudo eliminar el cliente"
+            });
+
+        }
+
+
+        if (resultado.affectedRows === 0) {
+
+            return res.status(404).json({
+                error: "Cliente no encontrado"
+            });
+
+        }
+
+
+        res.json({
+            mensaje: "Cliente eliminado correctamente"
+        });
+
+    });
+
+});
 
 
 // ==========================================

@@ -28,6 +28,11 @@ const btnAgregarVenta = document.getElementById("btnAgregarVenta");
 const tablaVenta = document.getElementById("tablaVenta");
 const totalVenta = document.getElementById("totalVenta");
 const btnRegistrarVenta = document.getElementById("btnRegistrarVenta");
+const formCliente =document.getElementById("formCliente");
+const tablaClientes =document.getElementById("tablaClientes");
+const nombreCliente =document.getElementById("nombreCliente");
+const telefonoCliente =document.getElementById("telefonoCliente");
+const correoCliente =document.getElementById("correoCliente");
 
 
 // ==========================================
@@ -1221,6 +1226,382 @@ async function cargarHistorialVentas() {
                 </td>
             </tr>
         `;
+
+    }
+
+}
+// ==========================================
+// CARGAR CLIENTES
+// ==========================================
+
+async function cargarClientes() {
+
+    try {
+
+        const respuesta =
+            await fetch("/clientes");
+
+
+        if (!respuesta.ok) {
+
+            throw new Error(
+                "No se pudieron cargar los clientes"
+            );
+
+        }
+
+
+        const clientes =
+            await respuesta.json();
+
+
+        // Actualizar selector de ventas
+
+        clienteVenta.innerHTML = `
+            <option value="">
+                Seleccionar cliente
+            </option>
+        `;
+
+
+        clientes.forEach(cliente => {
+
+            const opcion =
+                document.createElement("option");
+
+
+            opcion.value =
+                cliente.id_cliente;
+
+
+            opcion.textContent =
+                `${cliente.nombre} - ${cliente.telefono || "Sin teléfono"}`;
+
+
+            clienteVenta.appendChild(opcion);
+
+        });
+
+
+        // Mostrar tabla de clientes
+
+        mostrarClientes(clientes);
+
+
+    } catch (error) {
+
+        console.error(
+            "Error al cargar clientes:",
+            error
+        );
+
+    }
+
+}
+
+
+// ==========================================
+// MOSTRAR CLIENTES
+// ==========================================
+
+function mostrarClientes(clientes) {
+
+    tablaClientes.innerHTML = "";
+
+
+    if (clientes.length === 0) {
+
+        tablaClientes.innerHTML = `
+            <tr>
+                <td
+                    colspan="5"
+                    style="text-align:center;"
+                >
+                    No hay clientes registrados
+                </td>
+            </tr>
+        `;
+
+        return;
+
+    }
+
+
+    clientes.forEach(cliente => {
+
+        const fila =
+            document.createElement("tr");
+
+
+        fila.innerHTML = `
+
+            <td>
+                ${cliente.id_cliente}
+            </td>
+
+            <td>
+                ${cliente.nombre}
+            </td>
+
+            <td>
+                ${cliente.telefono || "-"}
+            </td>
+
+            <td>
+                ${cliente.correo || "-"}
+            </td>
+
+            <td>
+
+                <button
+                    class="btn-editar"
+                    onclick="editarCliente(
+                        ${cliente.id_cliente}
+                    )"
+                >
+                    Editar
+                </button>
+
+
+                <button
+                    class="btn-eliminar"
+                    onclick="eliminarCliente(
+                        ${cliente.id_cliente}
+                    )"
+                >
+                    Eliminar
+                </button>
+
+            </td>
+
+        `;
+
+
+        tablaClientes.appendChild(fila);
+
+    });
+
+}
+// ==========================================
+// GUARDAR / ACTUALIZAR CLIENTE
+// ==========================================
+
+formCliente.addEventListener(
+    "submit",
+    async function (event) {
+
+        event.preventDefault();
+
+
+        const nombre =
+            nombreCliente.value.trim();
+
+
+        const telefono =
+            telefonoCliente.value.trim();
+
+
+        const correo =
+            correoCliente.value.trim();
+
+
+        if (!nombre) {
+
+            alert(
+                "El nombre del cliente es obligatorio."
+            );
+
+            return;
+
+        }
+
+
+        const cliente = {
+
+            nombre,
+            telefono,
+            correo
+
+        };
+
+
+        try {
+
+            const idEditando =
+                formCliente.dataset.editando;
+
+
+            let respuesta;
+
+
+            if (idEditando) {
+
+                respuesta =
+                    await fetch(
+                        `/clientes/${idEditando}`,
+                        {
+
+                            method: "PUT",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify(
+                                    cliente
+                                )
+
+                        }
+                    );
+
+            } else {
+
+                respuesta =
+                    await fetch(
+                        "/clientes",
+                        {
+
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify(
+                                    cliente
+                                )
+
+                        }
+                    );
+
+            }
+
+
+            const resultado =
+                await respuesta.json();
+
+
+            if (!respuesta.ok) {
+
+                alert(
+                    resultado.error ||
+                    "No se pudo guardar el cliente"
+                );
+
+                return;
+
+            }
+
+
+            if (idEditando) {
+
+                alert(
+                    "Cliente actualizado correctamente."
+                );
+
+            } else {
+
+                alert(
+                    "Cliente registrado correctamente."
+                );
+
+            }
+
+
+            formCliente.reset();
+
+
+            delete formCliente.dataset.editando;
+
+
+            await cargarClientes();
+
+
+        } catch (error) {
+
+            console.error(
+                "Error al guardar cliente:",
+                error
+            );
+
+
+            alert(
+                "No se pudo conectar con el servidor."
+            );
+
+        }
+
+    }
+);
+// ==========================================
+// ELIMINAR CLIENTE
+// ==========================================
+
+async function eliminarCliente(id) {
+
+    const confirmar =
+        confirm(
+            "¿Seguro que deseas eliminar este cliente?"
+        );
+
+
+    if (!confirmar) {
+
+        return;
+
+    }
+
+
+    try {
+
+        const respuesta =
+            await fetch(
+                `/clientes/${id}`,
+                {
+                    method: "DELETE"
+                }
+            );
+
+
+        const resultado =
+            await respuesta.json();
+
+
+        if (!respuesta.ok) {
+
+            alert(
+                resultado.error ||
+                "No se pudo eliminar el cliente"
+            );
+
+            return;
+
+        }
+
+
+        alert(
+            "Cliente eliminado correctamente."
+        );
+
+
+        await cargarClientes();
+
+
+    } catch (error) {
+
+        console.error(
+            "Error al eliminar cliente:",
+            error
+        );
+
+
+        alert(
+            "No se pudo conectar con el servidor."
+        );
 
     }
 

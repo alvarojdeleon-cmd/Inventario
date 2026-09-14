@@ -345,6 +345,97 @@
         </button>
 
     </section>
+    <!-- ==========================================
+     GESTIÓN DE CLIENTES
+=========================================== -->
+
+<section class="formulario-section">
+
+    <h2>Gestión de clientes</h2>
+
+    <form id="formCliente">
+
+        <div class="grupo">
+
+            <label for="nombreCliente">
+                Nombre
+            </label>
+
+            <input
+                type="text"
+                id="nombreCliente"
+                required
+            >
+
+        </div>
+
+
+        <div class="grupo">
+
+            <label for="telefonoCliente">
+                Teléfono
+            </label>
+
+            <input
+                type="text"
+                id="telefonoCliente"
+            >
+
+        </div>
+
+
+        <div class="grupo">
+
+            <label for="correoCliente">
+                Correo
+            </label>
+
+            <input
+                type="email"
+                id="correoCliente"
+            >
+
+        </div>
+
+
+        <button
+            type="submit"
+            class="btn-agregar"
+        >
+            Guardar cliente
+        </button>
+
+    </form>
+
+
+    <div class="tabla-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Teléfono</th>
+                    <th>Correo</th>
+                    <th>Acciones</th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody id="tablaClientes">
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
 
 
 
